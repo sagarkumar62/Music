@@ -12,6 +12,7 @@ var imagekit = new ImageKit({
 });
 
 
+
 export function uploadFile(file, fileName) {
     return new Promise((resolve, reject) => {
         imagekit.upload({
@@ -23,6 +24,7 @@ export function uploadFile(file, fileName) {
                 reject(error);
             } else {
                 resolve(result);
+                console.log("File uploaded successfully:", result);
             }
         });
     });

@@ -13,7 +13,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 /* POST /auth/register */
 /* POST /auth/login */
 app.use('/auth',authRoutes)
