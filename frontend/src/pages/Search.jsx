@@ -18,7 +18,7 @@ const Search = () => {
         const query = e.target.value;
 
         console.log(query)
-        axios.get(`http://localhost:3000/songs/search-songs?text=${query}`,{
+        axios.get(`${import.meta.env.VITE_API_URL}/songs/search-songs?text=${query}`,{
             withCredentials: true
         })
         .then(response => {

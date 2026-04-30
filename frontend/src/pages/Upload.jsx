@@ -21,7 +21,7 @@ const Upload = () => {
         formData.append('chacha', document.querySelector('#_audioFile').files[0]); // Get the audio file from the input 
         // In a real app, you would upload the files to a server here
         // For now, we'll just add the song to the Redux store
-        axios.post('http://localhost:3000/songs/upload', formData, {
+        axios.post(`${import.meta.env.VITE_API_URL}/songs/upload`, formData, {
             withCredentials: true
         })
             .then(response => {

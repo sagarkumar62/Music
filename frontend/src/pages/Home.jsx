@@ -6,6 +6,9 @@ import NowPlaying from '../components/NowPlaying'
 import { setCurrentSong, togglePlayPause, selectSongs, selectCurrentSong, selectIsPlaying, setSongs } from '../redux/features/songSlice'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const Home = () => {
     const dispatch = useDispatch();
@@ -21,7 +24,7 @@ const Home = () => {
 
     useEffect(()=>{
 
-        axios.get("http://localhost:3000/songs/get-songs",{
+        axios.get(`${import.meta.env.VITE_API_URL}/songs/get-songs`,{
             withCredentials:true
         })
         .then(response=>{

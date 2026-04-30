@@ -13,7 +13,7 @@ const Login = () => {
         const username = document.querySelector("#username").value
         const password = document.querySelector("#password").value
 
-        axios.post("http://localhost:3000/auth/login",
+        axios.post(`${import.meta.env.VITE_API_URL}/auth/login`,
             {
                 username, password
             },
