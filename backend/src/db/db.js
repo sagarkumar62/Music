@@ -1,8 +1,14 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+const MongoDB_URI = process.env.MONGO_URI
+
+console.log(MongoDB_URI)
 
 function connectToDatabase() {
-    mongoose.connect("mongodb://localhost:27017/n22-music-project")
+    mongoose.connect(MongoDB_URI)
     .then(() => {
         console.log("Connected to MongoDB successfully");
     })
