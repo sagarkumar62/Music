@@ -14,6 +14,7 @@ export async function upload(req,res) {
         artist,
         title,
         audio: audioUrl,
+        user: req.userId,
     })
 
     res.status(201).json({
@@ -29,7 +30,7 @@ export async function upload(req,res) {
 }
 
 export async function getSongs(req,res) {
-    const songs = await songModel.find()
+    const songs = await songModel.find({ user: req.userId })
 
     res.status(200).json({
         message:"songs fetched successfully",
@@ -42,8 +43,15 @@ export async function getSongById(req,res){
 
 
     const song =await songModel.findOne({
-        _id: songId
+        _id: songId,
+        user: req.userId,
     })
+
+    if (!song) {
+        return res.status(404).json({
+            message: 'Song not found'
+        })
+    }
 
     res.status(200).json({
         message: "Song fetched successfully",
@@ -55,6 +63,7 @@ export async function searchSong(req,res){
     const text = req.query.text; // tujhe bhule
 
     const songs = await songModel.find({
+        user: req.userId,
         title:{
             $regex: text,
             $options: 'i' // case insensitive

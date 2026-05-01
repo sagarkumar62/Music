@@ -41,6 +41,74 @@
     text-overflow: ellipsis;
 }
 
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0 15px;
+}
+
+.time-display {
+    font-size: 12px;
+    color: #666;
+    min-width: 35px;
+    text-align: center;
+}
+
+.progress-slider {
+    flex: 1;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #000;
+    cursor: pointer;
+}
+
+.progress-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #000;
+    cursor: pointer;
+    border: none;
+}
+
+.now-playing-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-button {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #666;
+}
+
+.control-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #000;
+}
+
 .play-button {
     background: transparent;
     border: none;

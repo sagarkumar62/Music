@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { addSong } from '../redux/features/songSlice'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import Navigation from '../components/Navigation'
 import './Upload.css'
 import axios from 'axios'
@@ -9,11 +10,13 @@ import axios from 'axios'
 const Upload = () => {
     const [ title, setTitle ] = useState('')
     const [ artist, setArtist ] = useState('')
+    const [ isLoading, setIsLoading ] = useState(false)
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        setIsLoading(true)
 
         const formData = new FormData();
         formData.append('title', title);
@@ -26,7 +29,14 @@ const Upload = () => {
         })
             .then(response => {
                 console.log(response.data)
+                setIsLoading(false)
+                toast.success('Song uploaded successfully!')
                 navigate('/') // Redirect to home after upload
+            })
+            .catch(error => {
+                console.error(error)
+                setIsLoading(false)
+                toast.error('Failed to upload song. Please try again.')
             })
     }
 
@@ -68,7 +78,15 @@ const Upload = () => {
                         />
                     </label>
                 </div>
-                <button type="submit" className="submit-button">Upload Music</button>
+                <button type="submit" className="submit-button" disabled={isLoading}>
+                    {isLoading ? 'Uploading...' : 'Upload Music'}
+                </button>
+                {isLoading && (
+                    <div className="loader">
+                        <div className="spinner"></div>
+                        <p>Uploading your song...</p>
+                    </div>
+                )}
             </form>
 
             <Navigation />

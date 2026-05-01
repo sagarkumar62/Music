@@ -9,8 +9,8 @@ dotenv.config()
 
 const app = express();
 app.use(cors({
-origin: " http://localhost:5173",    
-credentials:true
+    origin: "http://localhost:5173",
+    credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,6 +27,12 @@ app.use('/auth',authRoutes)
 /* GET /songs/get-song/:mama */
 /* GET /songs/search-songs */
 app.use('/songs', songRoutes);
+
+/* POST /playlists/create */
+/* GET /playlists/user-playlists */
+/* POST /playlists/:playlistId/add-song/:songId */
+/* DELETE /playlists/:playlistId/remove-song/:songId */
+/* DELETE /playlists/:playlistId */
 
 
 

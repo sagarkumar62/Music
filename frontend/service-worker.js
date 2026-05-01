@@ -5,7 +5,6 @@ const urlsToCache = [
   "/styles.css",
   "/app.js",
   "/icons/icon.jpg",
-  "/icons/icon.jpg",
 ];
 
 // Install event: caching app shell

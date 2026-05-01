@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Navigation from '../components/Navigation'
 import './Search.css'
@@ -12,20 +12,32 @@ const Search = () => {
     const currentSong = useSelector(selectCurrentSong);
     const isPlaying = useSelector(selectIsPlaying);
     const [searchQuery, setSearchQuery] = useState('');
-
+    const debounceTimer = useRef(null);
 
     const handleSearch = (e) => {
         const query = e.target.value;
-
-        console.log(query)
-        axios.get(`${import.meta.env.VITE_API_URL}/songs/search-songs?text=${query}`,{
-            withCredentials: true
-        })
-        .then(response => {
-            console.log(response.data)
-            dispatch(setFilteredSongs(response.data.songs));
-        })
         setSearchQuery(query);
+
+        // Clear the previous timer on every keystroke
+        clearTimeout(debounceTimer.current);
+
+        if (!query.trim()) {
+            dispatch(setFilteredSongs([]));
+            return;
+        }
+
+        // Only fire the request 400ms after the user stops typing
+        debounceTimer.current = setTimeout(() => {
+            axios.get(`${import.meta.env.VITE_API_URL}/songs/search-songs?text=${query}`, {
+                withCredentials: true
+            })
+            .then(response => {
+                dispatch(setFilteredSongs(response.data.songs));
+            })
+            .catch(error => {
+                console.error('Search failed:', error);
+            })
+        }, 400);
     };
 
     const handlePlaySong = (song) => {
@@ -37,9 +49,9 @@ const Search = () => {
             <div className="search-header">
                 <h1>Search</h1>
                 <div className="search-bar">
-                    <input 
-                        type="text" 
-                        placeholder="Search for songs or artists..." 
+                    <input
+                        type="text"
+                        placeholder="Search for songs or artists..."
                         value={searchQuery}
                         onChange={handleSearch}
                         className="search-input"
@@ -50,15 +62,15 @@ const Search = () => {
                 {filteredSongs.length > 0 ? (
                     <div className="song-list">
                         {filteredSongs.map(song => (
-                            <div 
-                                key={song._id} 
-                                className="song-item" 
+                            <div
+                                key={song._id}
+                                className="song-item"
                                 onClick={() => handlePlaySong(song)}
                             >
-                                <img 
-                                    src={song.poster} 
-                                    alt={song.title} 
-                                    className="song-image" 
+                                <img
+                                    src={song.poster}
+                                    alt={song.title}
+                                    className="song-image"
                                 />
                                 <div className="song-details">
                                     <div className="song-title">{song.title}</div>
@@ -74,14 +86,12 @@ const Search = () => {
                 )}
             </div>
 
-            {/* Now Playing component */}
-            <NowPlaying 
-                currentSong={currentSong} 
-                isPlaying={isPlaying} 
-                togglePlayPause={() => dispatch(togglePlayPause())} 
+            <NowPlaying
+                currentSong={currentSong}
+                isPlaying={isPlaying}
+                togglePlayPause={() => dispatch(togglePlayPause())}
             />
 
-            {/* Navigation bar */}
             <Navigation />
         </section>
     )

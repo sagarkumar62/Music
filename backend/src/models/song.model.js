@@ -4,7 +4,6 @@ const songSchema = new mongoose.Schema({
     title:{
         type:String,
         required:true,
-        unique:true,
     },
     artist:{
         required:true,
@@ -12,11 +11,16 @@ const songSchema = new mongoose.Schema({
     },
     poster:{
         type:String,
-        default:"https://discussions.apple.com/content/attachment/592590040"
+        default:"https://100pilabs.com/images/default_music_player_icon_512.png"
     },
     audio:{
         type:String,
         required:true,
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
 })
 
