@@ -1,70 +1,24 @@
+const CACHE_NAME = "music-app-v1";
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
-  // Only handle GET
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
 
-  // 🚨 ADD THIS BLOCK HERE 👇
-  if (
-    url.pathname === "/manifest.json" ||
-    url.pathname.startsWith("/icons/")
-  ) {
-    return; // let browser handle it
-  }
-
-  // 🚨 Skip external APIs
-  self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  // ❌ NEVER cache external APIs/CDNs
-  if (!url.origin.includes(self.location.origin)) {
-    return fetch(req);
-  }
-
-  if (req.method !== "GET") return;
-
-  event.respondWith(fetch(req));
-});
-
-  // 🎧 AUDIO FILES
-  if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        cache.match(req).then((cached) => {
-          if (cached) return cached;
-
-          return fetch(req)
-            .then((networkRes) => {
-              if (networkRes && networkRes.ok) {
-                cache.put(req, networkRes.clone());
-              }
-              return networkRes;
-            })
-            .catch(() => {
-              return new Response("Audio not available offline", {
-                status: 404,
-              });
-            });
-        })
-      )
-    );
+  // ❌ DO NOT TOUCH external APIs/CDNs
+  if (url.origin !== self.location.origin) {
     return;
   }
 
-  // 📦 STATIC FILES
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      return (
-        cached ||
-        fetch(req).catch(() => {
-          if (req.mode === "navigate") {
-            return caches.match("/index.html");
-          }
-        })
-      );
-    })
-  );
+  event.respondWith(fetch(req));
 });
