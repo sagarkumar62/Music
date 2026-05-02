@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import songReducer from "./features/songSlice";
-import { timerMiddleware } from "./middleware/timerMiddleware";
+import { timerMiddleware } from "./timerMiddleware";
 
 export const store = configureStore({
   reducer: {
