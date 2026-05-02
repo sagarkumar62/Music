@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import "./Home.css";
-import Navigation from "../components/Navigation";
-import NowPlaying from "../components/NowPlaying";
 import {
   setCurrentSong,
   selectSongs,
@@ -12,152 +9,89 @@ import {
   stopSleepTimer,
   selectSleepTimer,
 } from "../redux/features/songSlice";
-import { Link } from "react-router-dom";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import Navigation from "../components/Navigation";
 
 const Home = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectSongs);
   const sleepTimer = useSelector(selectSleepTimer);
 
-  // 💤 local input state
-  const [timerMinutes, setTimerMinutes] = useState("");
+  const [minutes, setMinutes] = useState("");
 
-  // 🎧 Play Song
   const handlePlaySong = (song) => {
     dispatch(setCurrentSong(song));
   };
 
-  // ⬇️ Offline cache
-  const cacheSong = async (song) => {
-    const url = song.audio;
-    if (!url) return;
+  const handleStartTimer = () => {
+    const m = Number(minutes);
+    if (!m || m <= 0) return;
 
-    const cache = await caches.open("music-cache");
-
-    const match = await cache.match(url);
-    if (!match) {
-      const response = await fetch(url);
-      await cache.put(url, response.clone());
-    }
-
-    const existing = JSON.parse(localStorage.getItem("offlineSongs")) || [];
-
-    const already = existing.find((s) => s.audio === song.audio);
-
-    if (!already) {
-      existing.push({
-        title: song.title,
-        artist: song.artist,
-        poster: song.poster,
-        audio: song.audio,
-      });
-
-      localStorage.setItem("offlineSongs", JSON.stringify(existing));
-    }
+    dispatch(startSleepTimer(m));
+    setMinutes("");
   };
 
-  // 📡 Fetch songs
+  const handleStopTimer = () => {
+    dispatch(stopSleepTimer());
+  };
+
   useEffect(() => {
     const fetchSongs = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/songs/get-songs`,
-          {
-            withCredentials: true,
-          }
-        );
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/songs/get-songs`,
+        { withCredentials: true }
+      );
 
-        dispatch(resetSongState());
-        dispatch(setSongs(response.data.songs));
-      } catch (err) {
-        console.error(err);
-      }
+      dispatch(resetSongState());
+      dispatch(setSongs(res.data.songs));
     };
 
     fetchSongs();
   }, [dispatch]);
 
-  // 💤 START TIMER
-  const handleStartTimer = () => {
-    const minutes = Number(timerMinutes);
-
-    if (!minutes || minutes <= 0) return;
-
-    dispatch(startSleepTimer(minutes));
-    setTimerMinutes("");
-  };
-
-  // 🛑 STOP TIMER
-  const handleStopTimer = () => {
-    dispatch(stopSleepTimer());
-  };
-
   return (
     <section className="home-section">
-      {/* Header */}
       <div className="app-header">
-        <h1 className="app-title">Stream</h1>
-
-        <Link to="/search" className="search-icon">
-          🔍
-        </Link>
+        <h1>Stream</h1>
+        <Link to="/search">🔍</Link>
       </div>
 
-      {/* 💤 SLEEP TIMER UI (HOME - YOUR REQUIREMENT) */}
+      {/* 💤 TIMER UI (ONLY HERE) */}
       <div className="sleep-timer-box">
         <input
           type="number"
-          placeholder="Enter minutes (e.g. 30)"
-          value={timerMinutes}
-          onChange={(e) => setTimerMinutes(e.target.value)}
+          placeholder="Minutes (e.g. 30)"
+          value={minutes}
+          onChange={(e) => setMinutes(e.target.value)}
         />
 
-        <button onClick={handleStartTimer}>Start Timer</button>
+        <button onClick={handleStartTimer}>Start</button>
 
         {sleepTimer.active && (
-          <button onClick={handleStopTimer}>Stop Timer</button>
-        )}
-
-        {sleepTimer.active && (
-          <p>⏱ Remaining: {sleepTimer.remaining} sec</p>
+          <>
+            <button onClick={handleStopTimer}>Stop</button>
+            <p>⏱ Remaining: {sleepTimer.remaining}s</p>
+          </>
         )}
       </div>
 
-      {/* 🎵 Songs */}
+      {/* SONG LIST */}
       <div className="song-list">
         {songs.map((song) => (
           <div key={song._id} className="song-item">
             <img
               src={song.poster}
               alt={song.title}
-              className="song-image"
               onClick={() => handlePlaySong(song)}
             />
-
-            <div
-              className="song-details"
-              onClick={() => handlePlaySong(song)}
-            >
-              <div className="song-title">{song.title}</div>
-              <div className="song-artist">{song.artist}</div>
+            <div onClick={() => handlePlaySong(song)}>
+              {song.title} - {song.artist}
             </div>
-
-            <button
-              className="download-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                cacheSong(song);
-              }}
-            >
-              ⬇️
-            </button>
           </div>
         ))}
       </div>
 
-
-      {/* Navigation */}
       <Navigation />
     </section>
   );
