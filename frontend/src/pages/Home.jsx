@@ -1,16 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./Home.css";
 import Navigation from "../components/Navigation";
 import NowPlaying from "../components/NowPlaying";
 import {
   setCurrentSong,
-  togglePlayPause,
   selectSongs,
-  selectCurrentSong,
-  selectIsPlaying,
   setSongs,
   resetSongState,
+  startSleepTimer,
+  stopSleepTimer,
+  selectSleepTimer,
 } from "../redux/features/songSlice";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -18,8 +18,10 @@ import axios from "axios";
 const Home = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectSongs);
-  const currentSong = useSelector(selectCurrentSong);
-  const isPlaying = useSelector(selectIsPlaying);
+  const sleepTimer = useSelector(selectSleepTimer);
+
+  // 💤 local input state
+  const [timerMinutes, setTimerMinutes] = useState("");
 
   // 🎧 Play Song
   const handlePlaySong = (song) => {
@@ -66,9 +68,7 @@ const Home = () => {
           }
         );
 
-        // 🔥 IMPORTANT: reset player when new session loads
         dispatch(resetSongState());
-
         dispatch(setSongs(response.data.songs));
       } catch (err) {
         console.error(err);
@@ -77,6 +77,21 @@ const Home = () => {
 
     fetchSongs();
   }, [dispatch]);
+
+  // 💤 START TIMER
+  const handleStartTimer = () => {
+    const minutes = Number(timerMinutes);
+
+    if (!minutes || minutes <= 0) return;
+
+    dispatch(startSleepTimer(minutes));
+    setTimerMinutes("");
+  };
+
+  // 🛑 STOP TIMER
+  const handleStopTimer = () => {
+    dispatch(stopSleepTimer());
+  };
 
   return (
     <section className="home-section">
@@ -87,6 +102,26 @@ const Home = () => {
         <Link to="/search" className="search-icon">
           🔍
         </Link>
+      </div>
+
+      {/* 💤 SLEEP TIMER UI (HOME - YOUR REQUIREMENT) */}
+      <div className="sleep-timer-box">
+        <input
+          type="number"
+          placeholder="Enter minutes (e.g. 30)"
+          value={timerMinutes}
+          onChange={(e) => setTimerMinutes(e.target.value)}
+        />
+
+        <button onClick={handleStartTimer}>Start Timer</button>
+
+        {sleepTimer.active && (
+          <button onClick={handleStopTimer}>Stop Timer</button>
+        )}
+
+        {sleepTimer.active && (
+          <p>⏱ Remaining: {sleepTimer.remaining} sec</p>
+        )}
       </div>
 
       {/* 🎵 Songs */}
@@ -121,7 +156,6 @@ const Home = () => {
         ))}
       </div>
 
-      {/* 🎧 Player */}
 
       {/* Navigation */}
       <Navigation />

@@ -6,6 +6,8 @@ import {
   togglePlayPause,
   nextSong,
   previousSong,
+  selectSleepTimer,
+  stopSleepTimer,
 } from "../redux/features/songSlice";
 import "./NowPlaying.css";
 
@@ -17,6 +19,8 @@ const NowPlaying = ({
   const dispatch = useDispatch();
   const reduxCurrentSong = useSelector(selectCurrentSong);
   const reduxIsPlaying = useSelector(selectIsPlaying);
+  const sleepTimer = useSelector(selectSleepTimer);
+
   const audioRef = useRef(null);
 
   const currentSong = songProp || reduxCurrentSong;
@@ -26,10 +30,7 @@ const NowPlaying = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // 💤 Sleep timer state
-  const [sleepTimer, setSleepTimer] = useState(null);
-
-  // 🎧 Auto next song
+  // 🎧 auto next song
   const handleSongEnd = useCallback(() => {
     dispatch(nextSong());
   }, [dispatch]);
@@ -42,7 +43,7 @@ const NowPlaying = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // 🎵 audio logic
+  // 🎵 audio engine
   useEffect(() => {
     if (!audioRef.current) return;
     const audio = audioRef.current;
@@ -89,34 +90,19 @@ const NowPlaying = ({
     else dispatch(togglePlayPause());
   };
 
-  // 💤 START SLEEP TIMER
-  const startSleepTimer = (minutes) => {
-    if (sleepTimer) clearTimeout(sleepTimer);
+  // 💤 TIMER EFFECT (IMPORTANT PART)
+  useEffect(() => {
+    if (!sleepTimer?.active) return;
 
-    const timer = setTimeout(() => {
+    if (sleepTimer.remaining <= 0) {
       if (audioRef.current) {
         audioRef.current.pause();
       }
 
       dispatch(togglePlayPause());
-      setSleepTimer(null);
-    }, minutes * 60 * 1000);
-
-    setSleepTimer(timer);
-  };
-
-  // ❌ CANCEL TIMER
-  const cancelSleepTimer = () => {
-    if (sleepTimer) clearTimeout(sleepTimer);
-    setSleepTimer(null);
-  };
-
-  // cleanup
-  useEffect(() => {
-    return () => {
-      if (sleepTimer) clearTimeout(sleepTimer);
-    };
-  }, [sleepTimer]);
+      dispatch(stopSleepTimer());
+    }
+  }, [sleepTimer?.remaining, sleepTimer?.active, dispatch]);
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
@@ -156,15 +142,12 @@ const NowPlaying = ({
           <span className="time-display">{formatTime(duration)}</span>
         </div>
 
-        {/* 💤 TIMER UI */}
-        <div className="sleep-timer-controls">
-          <button onClick={() => startSleepTimer(30)}>30 min</button>
-          <button onClick={() => startSleepTimer(60)}>1 hour</button>
-
-          {sleepTimer && (
-            <button onClick={cancelSleepTimer}>Cancel</button>
-          )}
-        </div>
+        {/* 💤 optional timer status (no controls here) */}
+        {sleepTimer?.active && (
+          <div className="timer-status">
+            ⏱ Auto-stop in: {sleepTimer.remaining} sec
+          </div>
+        )}
       </div>
 
       {/* controls */}
