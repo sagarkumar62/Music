@@ -1,7 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/manifest.json", "destination": "/manifest.json" },
-    { "source": "/icons/(.*)", "destination": "/icons/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }
