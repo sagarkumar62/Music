@@ -6,9 +6,17 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
 
-  // 🚨 VERY IMPORTANT: Skip external APIs
-  if (url.origin !== self.location.origin) {
+  // 🚨 ADD THIS BLOCK HERE 👇
+  if (
+    url.pathname === "/manifest.json" ||
+    url.pathname.startsWith("/icons/")
+  ) {
     return; // let browser handle it
+  }
+
+  // 🚨 Skip external APIs
+  if (url.origin !== self.location.origin) {
+    return;
   }
 
   // 🎧 AUDIO FILES
