@@ -15,9 +15,19 @@ self.addEventListener("fetch", (event) => {
   }
 
   // 🚨 Skip external APIs
-  if (url.origin !== self.location.origin) {
-    return;
+  self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // ❌ NEVER cache external APIs/CDNs
+  if (!url.origin.includes(self.location.origin)) {
+    return fetch(req);
   }
+
+  if (req.method !== "GET") return;
+
+  event.respondWith(fetch(req));
+});
 
   // 🎧 AUDIO FILES
   if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")) {
