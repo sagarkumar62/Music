@@ -122,7 +122,6 @@ const Home = () => {
       </div>
 
       {/* 🎧 Player */}
-      <NowPlaying />
 
       {/* Navigation */}
       <Navigation />
