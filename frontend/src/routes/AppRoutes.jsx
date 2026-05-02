@@ -8,6 +8,7 @@ import Search from '../pages/Search'
 import Profile from '../pages/Profile'
 import Protected from '../components/Protected'
 import MainLayout from '../components/MainLayout'
+import OfflineSongs from '../pages/OfflineSongs.jsx'
 
 
 const AppRoutes = () => {
@@ -19,6 +20,7 @@ const AppRoutes = () => {
                     <Route path='search' element={<Search />} />
                     <Route path='profile' element={<Profile />} />
                     <Route path='upload' element={<Upload />} />
+                    <Route path='/offline' element={<OfflineSongs />} />
                 </Route>
                 <Route path='/login' element={<Login />} />
                 <Route path='/register' element={<Register />} />
