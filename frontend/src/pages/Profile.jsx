@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import './Profile.scss'
+import { useDispatch } from 'react-redux'
+import { resetSongState } from '../redux/features/songSlice'
+
 
 const Profile = () => {
     const [user, setUser] = useState(null)
@@ -17,6 +20,8 @@ const Profile = () => {
     const [saving, setSaving] = useState(false)
 
     const navigate = useNavigate()
+    const dispatch = useDispatch();
+
 
     // 📡 Fetch Profile + Songs
     useEffect(() => {
@@ -118,19 +123,23 @@ const Profile = () => {
     }
 
     // 🚪 Logout
-    const handleLogout = async () => {
-        try {
-            await axios.post(
-                `${import.meta.env.VITE_API_URL}/auth/logout`,
-                {},
-                { withCredentials: true }
-            )
-        } catch (err) {
-            console.warn('Logout failed', err)
-        } finally {
-            navigate('/login')
-        }
-    }
+   const handleLogout = async () => {
+  try {
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/auth/logout`,
+      {},
+      { withCredentials: true }
+    );
+
+    // 🔥 IMPORTANT: clear music state
+    dispatch(resetSongState());
+
+  } catch (err) {
+    console.warn("Logout failed", err);
+  } finally {
+    navigate("/login");
+  }
+};
 
     return (
         <section className="profile-section">

@@ -102,11 +102,22 @@ export const songSlice = createSlice({
     clearCurrentPlaylist: (state) => {
       state.currentPlaylist = null;
       state.isPlayingPlaylist = false;
-    }
+    },
+    resetSongState: (state) => {
+  state.songs = [];
+  state.currentSong = {};
+  state.currentSongIndex = 0;
+  state.isPlaying = false;
+  state.filteredSongs = [];
+  state.playlists = [];
+  state.currentPlaylist = null;
+  state.isPlayingPlaylist = false;
+},
   },
 });
 
-export const { setCurrentSong, togglePlayPause, searchSongs, addSong, setSongs,setFilteredSongs, nextSong, previousSong, setPlaylists, addPlaylist, updatePlaylist, removePlaylist, setCurrentPlaylist, clearCurrentPlaylist } = songSlice.actions;
+export const { setCurrentSong, togglePlayPause, searchSongs, addSong, setSongs,setFilteredSongs, nextSong, previousSong, setPlaylists, addPlaylist, updatePlaylist, removePlaylist, setCurrentPlaylist, clearCurrentPlaylist,   resetSongState   // 👈 ADD THIS
+ } = songSlice.actions;
 
 export const selectSongs = (state) => state.songs.songs;
 export const selectCurrentSong = (state) => state.songs.currentSong;
