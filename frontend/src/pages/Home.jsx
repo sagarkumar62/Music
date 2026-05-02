@@ -10,6 +10,7 @@ import {
   selectCurrentSong,
   selectIsPlaying,
   setSongs,
+  resetSongState,
 } from "../redux/features/songSlice";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -25,10 +26,9 @@ const Home = () => {
     dispatch(setCurrentSong(song));
   };
 
-  // ⬇️ Download Song for Offline
+  // ⬇️ Offline cache
   const cacheSong = async (song) => {
     const url = song.audio;
-
     if (!url) return;
 
     const cache = await caches.open("music-cache");
@@ -39,7 +39,6 @@ const Home = () => {
       await cache.put(url, response.clone());
     }
 
-    // 🔥 metadata save
     const existing = JSON.parse(localStorage.getItem("offlineSongs")) || [];
 
     const already = existing.find((s) => s.audio === song.audio);
@@ -56,16 +55,27 @@ const Home = () => {
     }
   };
 
-  // 📡 Fetch Songs from Backend
+  // 📡 Fetch songs
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/songs/get-songs`, {
-        withCredentials: true,
-      })
-      .then((response) => {
+    const fetchSongs = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/songs/get-songs`,
+          {
+            withCredentials: true,
+          }
+        );
+
+        // 🔥 IMPORTANT: reset player when new session loads
+        dispatch(resetSongState());
+
         dispatch(setSongs(response.data.songs));
-      })
-      .catch((err) => console.error(err));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchSongs();
   }, [dispatch]);
 
   return (
@@ -73,29 +83,16 @@ const Home = () => {
       {/* Header */}
       <div className="app-header">
         <h1 className="app-title">Stream</h1>
+
         <Link to="/search" className="search-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+          🔍
         </Link>
       </div>
 
-      {/* 🎵 Song List */}
+      {/* 🎵 Songs */}
       <div className="song-list">
         {songs.map((song) => (
           <div key={song._id} className="song-item">
-            {/* Click to Play */}
             <img
               src={song.poster}
               alt={song.title}
@@ -103,17 +100,19 @@ const Home = () => {
               onClick={() => handlePlaySong(song)}
             />
 
-            <div className="song-details" onClick={() => handlePlaySong(song)}>
+            <div
+              className="song-details"
+              onClick={() => handlePlaySong(song)}
+            >
               <div className="song-title">{song.title}</div>
               <div className="song-artist">{song.artist}</div>
             </div>
 
-            {/* ⬇️ Download Button */}
             <button
               className="download-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                cacheSong(song); // ✅ localStorage nahi, cache use
+                cacheSong(song);
               }}
             >
               ⬇️
@@ -122,9 +121,10 @@ const Home = () => {
         ))}
       </div>
 
-      {/* 🎧 Now Playing */}
+      {/* 🎧 Player */}
+      <NowPlaying />
 
-      {/* 🔽 Navigation */}
+      {/* Navigation */}
       <Navigation />
     </section>
   );

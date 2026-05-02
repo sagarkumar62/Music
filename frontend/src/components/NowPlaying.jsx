@@ -26,10 +26,15 @@ const NowPlaying = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // 💤 Sleep timer state
+  const [sleepTimer, setSleepTimer] = useState(null);
+
+  // 🎧 Auto next song
   const handleSongEnd = useCallback(() => {
     dispatch(nextSong());
   }, [dispatch]);
 
+  // ⏱ format time
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -37,8 +42,7 @@ const NowPlaying = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-
-
+  // 🎵 audio logic
   useEffect(() => {
     if (!audioRef.current) return;
     const audio = audioRef.current;
@@ -72,35 +76,70 @@ const NowPlaying = ({
     };
   }, [currentSong?.audio, isPlaying, handleSongEnd]);
 
+  // 🔁 seek
   const handleSeek = (e) => {
     const newTime = Number(e.target.value);
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
 
+  // ▶️ play/pause
   const handleTogglePlayPause = () => {
     if (togglePlayPauseProp) togglePlayPauseProp();
     else dispatch(togglePlayPause());
   };
 
+  // 💤 START SLEEP TIMER
+  const startSleepTimer = (minutes) => {
+    if (sleepTimer) clearTimeout(sleepTimer);
+
+    const timer = setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      dispatch(togglePlayPause());
+      setSleepTimer(null);
+    }, minutes * 60 * 1000);
+
+    setSleepTimer(timer);
+  };
+
+  // ❌ CANCEL TIMER
+  const cancelSleepTimer = () => {
+    if (sleepTimer) clearTimeout(sleepTimer);
+    setSleepTimer(null);
+  };
+
+  // cleanup
+  useEffect(() => {
+    return () => {
+      if (sleepTimer) clearTimeout(sleepTimer);
+    };
+  }, [sleepTimer]);
+
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
-  
+  if (!currentSong) return null;
 
   return (
     <div className="now-playing">
       <audio ref={audioRef} preload="auto" style={{ display: "none" }} />
+
       <img
         src={currentSong.poster}
         alt={currentSong.title}
         className="now-playing-image"
       />
+
       <div className="now-playing-details">
         <div className="now-playing-title">{currentSong.title}</div>
         <div className="now-playing-artist">{currentSong.artist}</div>
-        {/* Progress slider row */}
+
+        {/* progress */}
         <div className="progress-container">
           <span className="time-display">{formatTime(currentTime)}</span>
+
           <input
             type="range"
             className="progress-slider"
@@ -113,76 +152,39 @@ const NowPlaying = ({
               background: `linear-gradient(to right, #000 ${progress}%, #ddd ${progress}%)`,
             }}
           />
+
           <span className="time-display">{formatTime(duration)}</span>
         </div>
+
+        {/* 💤 TIMER UI */}
+        <div className="sleep-timer-controls">
+          <button onClick={() => startSleepTimer(30)}>30 min</button>
+          <button onClick={() => startSleepTimer(60)}>1 hour</button>
+
+          {sleepTimer && (
+            <button onClick={cancelSleepTimer}>Cancel</button>
+          )}
+        </div>
       </div>
+
+      {/* controls */}
       <div className="now-playing-controls">
         <button
           className="control-button"
           onClick={() => dispatch(previousSong())}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polygon points="19 20 9 12 19 4 19 20"></polygon>
-            <line x1="5" y1="19" x2="5" y2="5"></line>
-          </svg>
+          ⏮
         </button>
+
         <button className="play-button" onClick={handleTogglePlayPause}>
-          {isPlaying ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          )}
+          {isPlaying ? "⏸" : "▶️"}
         </button>
-        <button className="control-button" onClick={() => dispatch(nextSong())}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polygon points="5 4 15 12 5 20 5 4"></polygon>
-            <line x1="19" y1="5" x2="19" y2="19"></line>
-          </svg>
+
+        <button
+          className="control-button"
+          onClick={() => dispatch(nextSong())}
+        >
+          ⏭
         </button>
       </div>
     </div>
