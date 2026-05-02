@@ -9,7 +9,7 @@ dotenv.config()
 
 const app = express();
 app.use(cors({
-    origin: "https://music-gold-pi.vercel.app",
+    origin: process.env.FRONTEND_URL,
     credentials: true
 }));
 app.use(express.json({ limit: "10mb" }));
