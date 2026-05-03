@@ -9,11 +9,19 @@ import {
 } from "../redux/features/songSlice";
 import "./NowPlaying.css";
 
-const NowPlaying = () => {
+const NowPlaying = ({
+  currentSong: songProp,
+  isPlaying: isPlayingProp,
+  togglePlayPause: togglePlayPauseProp,
+}) => {
   const dispatch = useDispatch();
-  const currentSong = useSelector(selectCurrentSong);
-  const isPlaying = useSelector(selectIsPlaying);
+  const reduxCurrentSong = useSelector(selectCurrentSong);
+  const reduxIsPlaying = useSelector(selectIsPlaying);
   const audioRef = useRef(null);
+
+  const currentSong = songProp || reduxCurrentSong;
+  const isPlaying =
+    isPlayingProp !== undefined ? isPlayingProp : reduxIsPlaying;
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -29,12 +37,19 @@ const NowPlaying = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+
+
   useEffect(() => {
-    if (!audioRef.current || !currentSong) return;
+    if (!audioRef.current) return;
     const audio = audioRef.current;
-    if (audio.src !== currentSong.audio) {
-      audio.src = currentSong.audio;
+
+    const songUrl = currentSong?.audio;
+
+    if (songUrl && audio.src !== songUrl) {
+      audio.src = songUrl;
       audio.load();
+      setCurrentTime(0);
+      setDuration(0);
     }
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -44,58 +59,131 @@ const NowPlaying = () => {
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
 
-    isPlaying ? audio.play().catch(() => {}) : audio.pause();
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
 
     return () => {
       audio.removeEventListener("ended", handleSongEnd);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
-  }, [currentSong, isPlaying, handleSongEnd]);
+  }, [currentSong?.audio, isPlaying, handleSongEnd]);
 
-  if (!currentSong) return null;
+  const handleSeek = (e) => {
+    const newTime = Number(e.target.value);
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleTogglePlayPause = () => {
+    if (togglePlayPauseProp) togglePlayPauseProp();
+    else dispatch(togglePlayPause());
+  };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
-  return (
-    <div className="floating-player">
-      <audio ref={audioRef} />
-      
-      <div className="player-main-row">
-        <div className="player-left">
-          <div className="player-icon-box">
-             <svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-             </svg>
-          </div>
-          <div className="player-text">
-            <div className="player-title">{currentSong.title}</div>
-            <div className="player-artist">{currentSong.artist}</div>
-          </div>
-        </div>
+  
 
-        <div className="player-controls">
-          <button onClick={() => dispatch(previousSong())} className="p-ctrl">
-            <svg viewBox="0 0 24 24" fill="white" width="20" height="20"><path d="M6 6h2v12H6zm3.5 6L18 18V6z"/></svg>
-          </button>
-          <button onClick={() => dispatch(togglePlayPause())} className="p-play">
-            {isPlaying ? 
-              <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : 
-              <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M8 5v14l11-7z"/></svg>
-            }
-          </button>
-          <button onClick={() => dispatch(nextSong())} className="p-ctrl">
-            <svg viewBox="0 0 24 24" fill="white" width="20" height="20"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-          </button>
+  return (
+    <div className="now-playing">
+      <audio ref={audioRef} preload="auto" style={{ display: "none" }} />
+      <img
+        src={currentSong.poster}
+        alt={currentSong.title}
+        className="now-playing-image"
+      />
+      <div className="now-playing-details">
+        <div className="now-playing-title">{currentSong.title}</div>
+        <div className="now-playing-artist">{currentSong.artist}</div>
+        {/* Progress slider row */}
+        <div className="progress-container">
+          <span className="time-display">{formatTime(currentTime)}</span>
+          <input
+            type="range"
+            className="progress-slider"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={currentTime}
+            onChange={handleSeek}
+            style={{
+              background: `linear-gradient(to right, #000 ${progress}%, #ddd ${progress}%)`,
+            }}
+          />
+          <span className="time-display">{formatTime(duration)}</span>
         </div>
       </div>
-
-      <div className="player-progress-section">
-        <span className="p-time">{formatTime(currentTime)}</span>
-        <div className="p-slider-bg">
-          <div className="p-slider-fill" style={{ width: `${progress}%` }}></div>
-        </div>
-        <span className="p-time">{formatTime(duration)}</span>
+      <div className="now-playing-controls">
+        <button
+          className="control-button"
+          onClick={() => dispatch(previousSong())}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+        </button>
+        <button className="play-button" onClick={handleTogglePlayPause}>
+          {isPlaying ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          )}
+        </button>
+        <button className="control-button" onClick={() => dispatch(nextSong())}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19"></line>
+          </svg>
+        </button>
       </div>
     </div>
   );
