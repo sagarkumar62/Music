@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import './Register.css'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const Register = () => {
 
@@ -20,8 +21,12 @@ const Register = () => {
             withCredentials: true,
         }).then(response=>{
             console.log(response.data)
+            toast.success('Registration successful!');
             // Redirect to login page after successful registration
             navigate("/")
+        }).catch(err=>{
+            console.error("Registration failed", err);
+            toast.error('Registration failed. Please try again.');
         })
         
     }

@@ -75,3 +75,27 @@ export async function searchSong(req,res){
         songs: songs
     })
 }
+
+export async function deleteSong(req,res){
+    const songId = req.params.id;
+
+    const song = await songModel.findOneAndDelete({
+        _id: songId,
+        user: req.userId,
+    })
+
+    if (!song) {
+        return res.status(404).json({
+            message: 'Song not found'
+        })
+    }
+
+    res.status(200).json({
+        message: "Song deleted successfully",
+        song: {
+            id: song._id,
+            title: song.title,
+            artist: song.artist
+        }
+    })
+}

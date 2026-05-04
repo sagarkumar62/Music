@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./Home.css";
 import Navigation from "../components/Navigation";
@@ -13,12 +13,16 @@ import {
 } from "../redux/features/songSlice";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { toast } from 'react-toastify';
 
 const Home = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectSongs);
   const currentSong = useSelector(selectCurrentSong);
   const isPlaying = useSelector(selectIsPlaying);
+
+  const [longPressSong, setLongPressSong] = useState(null);
+  const [pressTimer, setPressTimer] = useState(null);
 
   // 🎧 Play Song
   const handlePlaySong = (song) => {
@@ -51,10 +55,33 @@ const Home = () => {
       });
 
       localStorage.setItem("offlineSongs", JSON.stringify(existing));
+      toast.success('Song downloaded successfully!');
+    } else {
+      toast.info('Song already downloaded');
     }
   };
 
-  // 📡 Fetch songs
+  // �️ Delete Song
+  const deleteSong = async (song) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/songs/delete-song/${song._id}`,
+        { withCredentials: true }
+      );
+
+      // Remove from local state
+      const updatedSongs = songs.filter(s => s._id !== song._id);
+      dispatch(setSongs(updatedSongs));
+
+      toast.success('Song deleted successfully!');
+      setLongPressSong(null);
+    } catch (err) {
+      toast.error('Failed to delete song');
+      console.error(err);
+    }
+  };
+
+  // �📡 Fetch songs
   useEffect(() => {
     const fetchSongs = async () => {
       try {
@@ -77,6 +104,28 @@ const Home = () => {
     fetchSongs();
   }, [dispatch]);
 
+  // Long press handlers
+  const handleMouseDown = (song) => {
+    const timer = setTimeout(() => {
+      setLongPressSong(song);
+    }, 500); // 500ms long press
+    setPressTimer(timer);
+  };
+
+  const handleMouseUp = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
+
   return (
     <section className="home-section">
       {/* Header */}
@@ -91,7 +140,15 @@ const Home = () => {
       {/* 🎵 Songs */}
       <div className="song-list">
         {songs.map((song) => (
-          <div key={song._id} className="song-item">
+          <div 
+            key={song._id} 
+            className="song-item"
+            onMouseDown={() => handleMouseDown(song)}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={() => handleMouseDown(song)}
+            onTouchEnd={handleMouseUp}
+          >
             <img
               src={song.poster}
               alt={song.title}
@@ -116,6 +173,18 @@ const Home = () => {
             >
               ⬇️
             </button>
+
+            {longPressSong && longPressSong._id === song._id && (
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteSong(song);
+                }}
+              >
+                🗑️
+              </button>
+            )}
           </div>
         ))}
       </div>

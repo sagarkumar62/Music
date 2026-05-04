@@ -4,6 +4,7 @@ import axios from "axios";
 import "./Login.css";
 import { useDispatch } from "react-redux";
 import { resetSongState } from "../redux/features/songSlice";
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,10 +28,12 @@ const Login = () => {
         // 🔥 IMPORTANT: clear old user's music state
         dispatch(resetSongState());
 
+        toast.success('Login successful!');
         navigate("/");
       })
       .catch((err) => {
         console.error("Login failed", err);
+        toast.error('Login failed. Please check your credentials.');
       });
   }
 

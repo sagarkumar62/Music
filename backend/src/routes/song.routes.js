@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload,getSongs,getSongById ,searchSong} from '../controllers/song.controller.js';
+import { upload,getSongs,getSongById ,searchSong,deleteSong} from '../controllers/song.controller.js';
 import multer from 'multer';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -43,5 +43,6 @@ router.get('/get-song/:mama',getSongById)
 
 router.get('/search-songs',searchSong)
 
+router.delete('/delete-song/:id',deleteSong)
 
 export default router;
